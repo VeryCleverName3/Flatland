@@ -298,7 +298,10 @@ function useInsult(insult){
   setTimeout(function(){insulting = false;}, 1000);
   enemyInBattle.health--;
   p.health--;
-  enemyInBattle.changeSides(enemyInBattle, enemyInBattle.sides - 1);
+  if(p.learnedInsults[insult][1] == enemyInBattle.sides){
+    enemyInBattle.health--;
+  }
+  enemyInBattle.changeSides(enemyInBattle, enemyInBattle.health);
   if(enemyInBattle.health <= 2){
     setTimeout(function(){
       p.health = p.sides;
