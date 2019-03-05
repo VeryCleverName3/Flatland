@@ -143,9 +143,9 @@ function Enemy(x, y, sides){
   var headingY = 0;
   this.wander = function(){
     timer++;
-    if(timer > 4){
-      headingX = (Math.random() - 0.5);
-      headingY = (Math.random() - 0.5);
+    if(timer > 60){
+      headingX = (Math.random() - 0.5) / 4;
+      headingY = (Math.random() - 0.5) / 4;
       timer = 0;
     }
     this.x += headingX;
