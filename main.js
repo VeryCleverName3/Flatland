@@ -3,6 +3,8 @@ var c = document.getElementById("mainCanvas");
 var ctx = c.getContext("2d");
 var s = c.width = c.height = window.innerHeight;
 
+var insults = [["Blah", -1]];
+
 //Set up textalign and format
 ctx.textAlign = "center";
 ctx.font = "20px comic sans ms";
@@ -74,6 +76,7 @@ function Entity(x, y, sides){
   this.x = x;
   this.y = y;
   this.sides = sides;
+  this.health = sides;
   entities[entities.length] = this;
   //Function to draw entity
   this.draw = function(){
@@ -91,7 +94,7 @@ function Entity(x, y, sides){
         object.sides = newSides;
         clearInterval(loop);
       }
-    }, 1000 / 60);
+    }, 1000 / 140);
   }
 }
 
@@ -197,7 +200,6 @@ function Enemy(x, y, sides){
   var timer = 0;
   var headingX = 0;
   var headingY = 0;
-  this.health = sides;
   this.wander = function(){
     timer++;
     if(timer > 60){
@@ -242,6 +244,8 @@ function drawObjectsInBattle(){
 
 function battleUI(){
   ctx.beginPath();
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 1;
   ctx.moveTo(0, s * (5.5 / 8));
   ctx.lineTo(s, s * (5.5 / 8));
   ctx.moveTo(s / 2, s * (5.5 / 8));
@@ -249,6 +253,15 @@ function battleUI(){
   ctx.moveTo(0, s * (5.5 / 8) + (0.5 * s * (2.5 / 8)));
   ctx.lineTo(s, s * (5.5 / 8) + (0.5 * s * (2.5 / 8)));
   ctx.stroke();
+  ctx.closePath();
+  ctx.beginPath();
+  ctx.strokeStyle = "green";
+  ctx.lineWidth = 10;
+  ctx.moveTo(0, s * (5.5 / 8) - 5);
+  ctx.lineTo(s * ((p.health - 2) / (p.sides - 2)), s * (5.5 / 8) - 5);
+  ctx.stroke();
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 1;
   ctx.closePath();
   ctx.fillText(p.learnedInsults[0][0], s * (1 / 4), (s * (5.5 / 8)) + ((1 / 4) * (s * (2.5 / 8))));
   ctx.fillText(p.learnedInsults[1][0], s * (3 / 4), (s * (5.5 / 8)) + ((1 / 4) * (s * (2.5 / 8))));
@@ -284,16 +297,28 @@ function useInsult(insult){
   currentInsult = insult;
   setTimeout(function(){insulting = false;}, 1000);
   enemyInBattle.health--;
+  p.health--;
   enemyInBattle.changeSides(enemyInBattle, enemyInBattle.sides - 1);
-  if(enemyInBattle.health == 2){
-    enemyInBattle.x = undefined;
-    clearInterval(battleLoop);
-    overLoop = setInterval(updateOverworld, 1000 / 60);
-    p.x = tempPX;
-    p.y = tempPY;
+  if(enemyInBattle.health <= 2){
+    setTimeout(function(){
+      p.health = p.sides;
+      enemyInBattle.x = undefined;
+      clearInterval(battleLoop);
+      overLoop = setInterval(updateOverworld, 1000 / 60);
+      p.x = tempPX;
+      p.y = tempPY;
+    }, 1000);
+  } else if(p.health <= 2){
+    setTimeout(
+      function(){
+        ctx.clearRect(0, 0, s, s);
+        clearInterval(battleLoop);
+        ctx.fillText("You Died. In a game about shapes.", s / 2, s / 2);
+    }, 1000);
   }
 }
 
 function drawInsult(){
   ctx.fillText(p.learnedInsults[currentInsult][0], (s / 4), s * (1.25 / 4));
+  ctx.fillText(insults[Math.floor(Math.random() * insults.length)][0], s * (3 / 4), s * (0.5 / 4))
 }
