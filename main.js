@@ -3,8 +3,12 @@ var c = document.getElementById("mainCanvas");
 var ctx = c.getContext("2d");
 var s = c.width = c.height = window.innerHeight;
 
+//Set up textalign and format
+ctx.textAlign = "center";
+ctx.font = "20px comic sans ms";
+
 //establish timing loop at 60 fps
-setInterval(update, 1000 / 60);
+var overLoop = setInterval(updateOverworld, 1000 / 60);
 
 //array of boolean values at keycode indexes
 var keyDown = []
@@ -14,6 +18,22 @@ var entities = [];
 
 //Array of enemies for calling their functions
 var enemies = [];
+
+//interval reference for battling
+var battleLoop;
+
+//Value to prevent player from insulting
+var insulting = false;
+
+//Index of current insult
+var currentInsult;
+
+//Temporary player coordinates
+var tempPX;
+var tempPY;
+
+//Variable for enemy to fight
+var enemyInBattle;
 
 //Event listeners for keyboard input
 onkeydown = function(e){
@@ -27,7 +47,7 @@ onkeyup = function(e){
 var p = new Player(0, 0, 3);
 
 //Create update function
-function update(){
+function updateOverworld(){
   //Reset screen
   ctx.clearRect(0, 0, s, s);
 
@@ -35,6 +55,9 @@ function update(){
 
   //move player
   p.move();
+
+  //manage insults
+  p.insult();
 
   callEnemyFunctions();
 }
@@ -57,11 +80,26 @@ function Entity(x, y, sides){
     //ctx.fillRect((this.x * s / 100) - (p.x * s / 100) + (s / 2), (this.y * s / 100) - (p.y * s / 100) + (s / 2), s / 100, s / 100);
     drawPolygon(this.sides, 2, this.x, this.y);
   }
+  this.changeSides = function(object, newSides){
+    var loop = setInterval(function(){
+      if(newSides > object.sides){
+        object.sides += 0.01;
+      } else if (newSides < object.sides){
+        object.sides -= 0.01;
+      }
+      if(object.sides < newSides + 0.02 && object.sides > newSides - 0.02){
+        object.sides = newSides;
+        clearInterval(loop);
+      }
+    }, 1000 / 60);
+  }
 }
 
 //Player class
 function Player(x, y, sides){
   Entity.call(this, x, y, sides);
+  this.score = 0;
+  this.learnedInsults = [["Your Mom", -1], ["*Laughs*", -1], ["You're rubber & I'm glue", -1], ["Insult here", -1]];
   this.move = function(){
     if(keyDown[65]){
       this.x -= 0.5;
@@ -74,6 +112,24 @@ function Player(x, y, sides){
     }
     if(keyDown[83]){
       this.y += 0.5;
+    }
+  }
+  this.insultCooldown = 0;
+  this.insult = function(){
+    this.insultCooldown++;
+    if(keyDown[32] && this.insultCooldown > 60){
+      this.insultCooldown = 0;
+      var inBattle = false;
+      for(var i = 0; i < enemies.length; i++){
+        if(distance(this, enemies[i]) < 10 && !inBattle){
+          inBattle = true;
+          tempPX = p.x;
+          tempPY = p.y;
+          enemyInBattle = enemies[i];
+          clearInterval(overLoop);
+          battleLoop = setInterval(battle, 1000 / 60);
+        }
+      }
     }
   }
 }
@@ -141,6 +197,7 @@ function Enemy(x, y, sides){
   var timer = 0;
   var headingX = 0;
   var headingY = 0;
+  this.health = sides;
   this.wander = function(){
     timer++;
     if(timer > 60){
@@ -157,4 +214,86 @@ function callEnemyFunctions(){
   for(var i = 0; i < enemies.length; i++){
     enemies[i].wander();
   }
+}
+
+function distance(a, b){
+  return Math.hypot((a.y - b.y), (a.x - b.x));
+}
+
+function battle(){
+  //Clean canvas
+  ctx.clearRect(0, 0, s, s);
+
+  //reset camera
+  p.x = 0;
+  p.y = 0;
+
+  drawObjectsInBattle();
+
+  battleUI();
+
+  manageInsults();
+}
+
+function drawObjectsInBattle(){
+  drawPolygon(p.sides, 7, -25, 5);
+  drawPolygon(enemyInBattle.sides, 4, 25, -25);
+}
+
+function battleUI(){
+  ctx.beginPath();
+  ctx.moveTo(0, s * (5.5 / 8));
+  ctx.lineTo(s, s * (5.5 / 8));
+  ctx.moveTo(s / 2, s * (5.5 / 8));
+  ctx.lineTo(s / 2, s);
+  ctx.moveTo(0, s * (5.5 / 8) + (0.5 * s * (2.5 / 8)));
+  ctx.lineTo(s, s * (5.5 / 8) + (0.5 * s * (2.5 / 8)));
+  ctx.stroke();
+  ctx.closePath();
+  ctx.fillText(p.learnedInsults[0][0], s * (1 / 4), (s * (5.5 / 8)) + ((1 / 4) * (s * (2.5 / 8))));
+  ctx.fillText(p.learnedInsults[1][0], s * (3 / 4), (s * (5.5 / 8)) + ((1 / 4) * (s * (2.5 / 8))));
+  ctx.fillText(p.learnedInsults[2][0], s * (1 / 4), (s * (5.5 / 8)) + ((3 / 4) * (s * (2.5 / 8))));
+  ctx.fillText(p.learnedInsults[3][0], s * (3 / 4), (s * (5.5 / 8)) + ((3 / 4) * (s * (2.5 / 8))));
+  ctx.fillText("1", s * (0.25 / 4), (s * (5.5 / 8)) + ((0.4 / 4) * (s * (2.5 / 8))));
+  ctx.fillText("2", s * (2.25 / 4), (s * (5.5 / 8)) + ((0.4 / 4) * (s * (2.5 / 8))));
+  ctx.fillText("3", s * (0.25 / 4), (s * (5.5 / 8)) + ((2.4 / 4) * (s * (2.5 / 8))));
+  ctx.fillText("4", s * (2.25 / 4), (s * (5.5 / 8)) + ((2.4 / 4) * (s * (2.5 / 8))));
+}
+
+function manageInsults(){
+  //keycodes for 1, 2, 3, 4 are 49, 50, 51, 52
+  if(keyDown[49] && !insulting){
+    useInsult(0);
+  }
+  if(keyDown[50] && !insulting){
+    useInsult(1);
+  }
+  if(keyDown[51] && !insulting){
+    useInsult(2);
+  }
+  if(keyDown[52] && !insulting){
+    useInsult(3);
+  }
+  if(insulting){
+    drawInsult();
+  }
+}
+
+function useInsult(insult){
+  insulting = true;
+  currentInsult = insult;
+  setTimeout(function(){insulting = false;}, 1000);
+  enemyInBattle.health--;
+  enemyInBattle.changeSides(enemyInBattle, enemyInBattle.sides - 1);
+  if(enemyInBattle.health == 2){
+    enemyInBattle.x = undefined;
+    clearInterval(battleLoop);
+    overLoop = setInterval(updateOverworld, 1000 / 60);
+    p.x = tempPX;
+    p.y = tempPY;
+  }
+}
+
+function drawInsult(){
+  ctx.fillText(p.learnedInsults[currentInsult][0], (s / 4), s * (1.25 / 4));
 }
