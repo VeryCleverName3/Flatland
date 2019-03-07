@@ -3,7 +3,9 @@ var c = document.getElementById("mainCanvas");
 var ctx = c.getContext("2d");
 var s = c.width = c.height = window.innerHeight;
 
+//Enemy insult pool
 var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1]];
+//Player insult pool
 var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not very SHARP!", 3], ["You're about to be penta-GONE!", 5], ["You're about to be hexa-GONE", 6], ["You're about to be septa-GONE", 7], ["You're about to be octa-GONE", 8], ["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1]];
 
 //Set up textalign and format
@@ -14,7 +16,7 @@ ctx.font = "20px comic sans ms";
 var overLoop = setInterval(updateOverworld, 1000 / 60);
 
 //array of boolean values at keycode indexes
-var keyDown = []
+var keyDown = [];
 
 //Current enemy insults
 var currentEnemyInsult;
@@ -71,11 +73,13 @@ function updateOverworld(){
   //manage insults
   p.insult();
 
+  callEnemyFunctions();
+
   if(p.score >= p.scoreToNext){
     levelUp();
   }
 
-  callEnemyFunctions();
+  randomSpawns();
 }
 
 //draws entities in array
@@ -106,6 +110,7 @@ function Entity(x, y, sides){
       }
       if(object.sides < newSides + 0.02 && object.sides > newSides - 0.02){
         object.sides = newSides;
+        object.health = newSides;
         clearInterval(loop);
       }
     }, 1000 / 140);
@@ -135,7 +140,7 @@ function Player(x, y, sides){
   this.insultCooldown = 0;
   this.insult = function(){
     this.insultCooldown++;
-    if(keyDown[32] && this.insultCooldown > 60){
+    if(this.insultCooldown > 60){
       this.insultCooldown = 0;
       var inBattle = false;
       for(var i = 0; i < enemies.length; i++){
@@ -215,6 +220,10 @@ function Enemy(x, y, sides){
   var timer = 0;
   var headingX = 0;
   var headingY = 0;
+  var running = false;
+  var runningTarget;
+  this.insultTimer = 60;
+  this.insultText = insults[Math.floor(Math.random() * insults.length)][0];
   this.wander = function(){
     timer++;
     if(timer > 60){
@@ -225,11 +234,42 @@ function Enemy(x, y, sides){
     this.x += headingX;
     this.y += headingY;
   }
+  this.collide = function(){
+    for(var i = 0; i < enemies.length; i++){
+      if(distance(enemies[i], this) < 5 && enemies[i].sides < this.sides && enemies.runningTarget != this){
+        if(enemies[i].sides > 3) enemies[i].changeSides(enemies[i], Math.ceil(enemies[i].sides - 1));
+        enemies[i].running = true;
+        enemies[i].runningTarget = this;
+        this.insultTimer = 0;
+      }
+    }
+  }
+  this.run = function(){
+    if(this.running){
+      if(distance(this.runningTarget, this) < 100){
+        if(this.x < this.runningTarget.x){
+          this.x -= 0.25;
+        } else this.x += 0.25;
+        if(this.y < this.runningTarget.y){
+          this.y -= 0.25;
+        } else this.y += 0.25;
+      }
+    }
+  }
+  this.sayInsult = function(){
+    var xOffset = ((this.x * (s / 100)) - (p.x * (s / 100)) + (s / 2));
+    var yOffset = ((this.y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
+    this.insultTimer++;
+    if(this.insultTimer < 60) ctx.fillText(this.insultText, xOffset, yOffset - (s * (3 / 100)));
+  }
 }
 
 function callEnemyFunctions(){
   for(var i = 0; i < enemies.length; i++){
     enemies[i].wander();
+    enemies[i].collide();
+    enemies[i].run();
+    enemies[i].sayInsult();
   }
 }
 
@@ -248,7 +288,7 @@ function battle(){
   drawObjectsInBattle();
 
   battleUI();
-  
+
   manageInsults();
 }
 
@@ -428,4 +468,26 @@ function pickToReplace(){
     p.learnedInsults[3] = insultsToLearn[moveToLearn];
     overLoop = setInterval(updateOverworld, 1000 / 60);
   } else setTimeout(pickToReplace, 1000 / 60);
+}
+
+function randomSpawns(){
+  var numEnemies = 0;
+  for(var i = 0; i < enemies.length; i++){
+    if(enemies[i].x >= -Infinity){
+      numEnemies++;
+    }
+    if(enemies[i].y > p.y + 200 || enemies[i].y < p.y - 200){
+      enemies[i].x = NaN;
+    }
+    if(enemies[i].x > p.x + 200 || enemies[i].x < p.x - 200){
+      enemies[i].x = NaN;
+    }
+  }
+  if(numEnemies < 25){
+    var x = Math.random() * 130 - 65;
+    var y = Math.random() * 130 - 65;
+    while(x > -50 && x < 50) x = Math.random() * 130 - 65;
+    while(y > -50 && y < 50) y = Math.random() * 130 - 65;
+    new Enemy(x + p.x, y + p.y, Math.floor(Math.random() * 8 + 3));
+  }
 }
