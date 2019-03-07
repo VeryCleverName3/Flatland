@@ -3,7 +3,8 @@ var c = document.getElementById("mainCanvas");
 var ctx = c.getContext("2d");
 var s = c.width = c.height = window.innerHeight;
 
-var insults = [["Blah", -1]];
+var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1]];
+var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not very SHARP!", 3], ["You're about to be penta-GONE!", 5], ["You're about to be hexa-GONE", 6], ["You're about to be septa-GONE", 7], ["You're about to be octa-GONE", 8], ["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1]];
 
 //Set up textalign and format
 ctx.textAlign = "center";
@@ -14,6 +15,15 @@ var overLoop = setInterval(updateOverworld, 1000 / 60);
 
 //array of boolean values at keycode indexes
 var keyDown = []
+
+//Current enemy insults
+var currentEnemyInsult;
+
+//move about to learn
+var moveToLearn;
+
+//Array of insults on levelup
+var insultsToLearn = [0, 0, 0, 0];
 
 //Array of entities for drawing
 var entities = [];
@@ -61,6 +71,10 @@ function updateOverworld(){
   //manage insults
   p.insult();
 
+  if(p.score >= p.scoreToNext){
+    levelUp();
+  }
+
   callEnemyFunctions();
 }
 
@@ -102,7 +116,8 @@ function Entity(x, y, sides){
 function Player(x, y, sides){
   Entity.call(this, x, y, sides);
   this.score = 0;
-  this.learnedInsults = [["Your Mom", -1], ["*Laughs*", -1], ["You're rubber & I'm glue", -1], ["Insult here", -1]];
+  this.scoreToNext = 1;
+  this.learnedInsults = [["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1]];
   this.move = function(){
     if(keyDown[65]){
       this.x -= 0.5;
@@ -233,7 +248,7 @@ function battle(){
   drawObjectsInBattle();
 
   battleUI();
-
+  
   manageInsults();
 }
 
@@ -295,15 +310,22 @@ function manageInsults(){
 function useInsult(insult){
   insulting = true;
   currentInsult = insult;
+  currentEnemyInsult = Math.floor(Math.random() * insults.length)
   setTimeout(function(){insulting = false;}, 1000);
-  enemyInBattle.health--;
-  p.health--;
+  if(p.learnedInsults[insult][1] == -1) enemyInBattle.health--;
+  p.health -= 2;
   if(p.learnedInsults[insult][1] == enemyInBattle.sides){
-    enemyInBattle.health--;
+    enemyInBattle.health -= 2;
   }
   enemyInBattle.changeSides(enemyInBattle, enemyInBattle.health);
   if(enemyInBattle.health <= 2){
+    for(var i = 0; i < 4; i++){
+      var randInsult = learnableInsults[Math.floor(Math.random() * learnableInsults.length)];
+      while(insultsToLearn.includes(randInsult) || p.learnedInsults.includes(randInsult)) randInsult = learnableInsults[Math.floor(Math.random() * learnableInsults.length)];
+      insultsToLearn[i] = randInsult;
+    }
     setTimeout(function(){
+      p.score++;
       p.health = p.sides;
       enemyInBattle.x = undefined;
       clearInterval(battleLoop);
@@ -323,5 +345,87 @@ function useInsult(insult){
 
 function drawInsult(){
   ctx.fillText(p.learnedInsults[currentInsult][0], (s / 4), s * (1.25 / 4));
-  ctx.fillText(insults[Math.floor(Math.random() * insults.length)][0], s * (3 / 4), s * (0.5 / 4))
+  ctx.fillText(insults[currentEnemyInsult][0], s * (3 / 4), s * (0.5 / 4))
+}
+
+function levelUp(){
+  ctx.fillStyle = "white";
+  ctx.fillRect(s * (2.25 / 4), 0, s / 2, s);
+  ctx.strokeRect(s * (2.25 / 4), 0, s * (1.75 / 4), s);
+  ctx.beginPath();
+  ctx.moveTo(s * (2.25 / 4), s * (1 / 4));
+  ctx.lineTo(s, s * (1 / 4));
+  ctx.moveTo(s * (2.25 / 4), s * (2 / 4));
+  ctx.lineTo(s, s * (2 / 4));
+  ctx.moveTo(s * (2.25 / 4), s * (3 / 4));
+  ctx.lineTo(s, s * (3 / 4));
+  ctx.stroke();
+  ctx.closePath();
+  ctx.fillStyle = "black";
+  for(var i = 0; i < 4; i++){
+    ctx.fillText(i + 1, (s * (3.125 / 4)), (s * ((i) / 4)) + 20);
+    ctx.fillText(insultsToLearn[i][0], s * 3.125 / 4, s * i / 4 + (s * (1 / 8)));
+  }
+  if(keyDown[49]){
+    p.score -= p.scoreToNext;
+    p.scoreToNext *= 1.5;
+    p.sides++;
+    p.health++;
+    moveToLearn = 0;
+    promptLearn();
+  } else if(keyDown[50]){
+    p.score -= p.scoreToNext;
+    p.scoreToNext *= 1.5;
+    p.sides++;
+    p.health++;
+    moveToLearn = 1;
+    promptLearn();
+  } else if(keyDown[51]){
+    p.score -= p.scoreToNext;
+    p.scoreToNext *= 1.5;
+    p.sides++;
+    p.health++;
+    moveToLearn = 2;
+    promptLearn();
+  } else if(keyDown[52]){
+    p.score -= p.scoreToNext;
+    p.scoreToNext *= 1.5;
+    p.sides++;
+    p.health++;
+    moveToLearn = 3;
+    promptLearn();
+  }
+}
+
+function promptLearn(){
+  clearInterval(overLoop);
+  ctx.clearRect(0, 0, s, s);
+  ctx.fillText("Press Space to learn this move, or X to cancel the move learning process.", s / 2, s / 2);
+  ctx.fillText(insultsToLearn[moveToLearn][0], s / 2, s / 2 + 50);
+  if(keyDown[32]){
+    pickToReplace();
+  } else if(keyDown[88]){
+    overLoop = setInterval(updateOverworld, 1000 / 60);
+  } else setTimeout(promptLearn, 1000 / 60);
+}
+
+function pickToReplace(){
+  ctx.clearRect(0, 0, s, s);
+  ctx.fillText("Which move would you like to replace?", s / 2, 20);
+  for(var i = 0; i < 4; i++){
+    ctx.fillText((i + 1) + ": " + p.learnedInsults[i][0], s * (1 / 4), ((s / 2) * (i / 4)) + (s / 4));
+  }
+  if(keyDown[49]){
+    p.learnedInsults[0] = insultsToLearn[moveToLearn];
+    overLoop = setInterval(updateOverworld, 1000 / 60);
+  } else if(keyDown[50]){
+    p.learnedInsults[1] = insultsToLearn[moveToLearn];
+    overLoop = setInterval(updateOverworld, 1000 / 60);
+  } else if(keyDown[51]){
+    p.learnedInsults[2] = insultsToLearn[moveToLearn];
+    overLoop = setInterval(updateOverworld, 1000 / 60);
+  } else if(keyDown[52]){
+    p.learnedInsults[3] = insultsToLearn[moveToLearn];
+    overLoop = setInterval(updateOverworld, 1000 / 60);
+  } else setTimeout(pickToReplace, 1000 / 60);
 }
