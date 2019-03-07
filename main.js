@@ -478,10 +478,10 @@ function randomSpawns(){
     if(enemies[i].x >= -Infinity){
       numEnemies++;
     }
-    if(enemies[i].y > p.y + 150 || enemies[i].y < p.y - 150){
+    if(enemies[i].y > p.y + 80 || enemies[i].y < p.y - 80){
       enemies[i].x = NaN;
     }
-    if(enemies[i].x > p.x + 150 || enemies[i].x < p.x - 150){
+    if(enemies[i].x > p.x + 80 || enemies[i].x < p.x - 80){
       enemies[i].x = NaN;
     }
   }
