@@ -266,10 +266,12 @@ function Enemy(x, y, sides){
 
 function callEnemyFunctions(){
   for(var i = 0; i < enemies.length; i++){
-    enemies[i].wander();
-    enemies[i].collide();
-    enemies[i].run();
-    enemies[i].sayInsult();
+    if(enemies[i].x > -Infinity){
+      enemies[i].wander();
+      enemies[i].collide();
+      enemies[i].run();
+      enemies[i].sayInsult();
+    }
   }
 }
 
@@ -476,10 +478,10 @@ function randomSpawns(){
     if(enemies[i].x >= -Infinity){
       numEnemies++;
     }
-    if(enemies[i].y > p.y + 200 || enemies[i].y < p.y - 200){
+    if(enemies[i].y > p.y + 150 || enemies[i].y < p.y - 150){
       enemies[i].x = NaN;
     }
-    if(enemies[i].x > p.x + 200 || enemies[i].x < p.x - 200){
+    if(enemies[i].x > p.x + 150 || enemies[i].x < p.x - 150){
       enemies[i].x = NaN;
     }
   }
