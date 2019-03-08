@@ -493,3 +493,55 @@ function randomSpawns(){
     new Enemy(x + p.x, y + p.y, Math.floor(Math.random() * 8 + 3));
   }
 }
+
+function Line(x, y, sides){
+  Entity.call(this, x, y, sides);
+  this.insultText = "";
+  this.insultTimer = 60;
+  this.angle = 0;
+  this.move = function(){
+    this.slope = Math.tan(this.angle * (Math.PI / 180));
+    console.log(this.slope + ", " + this.angle);
+    if(this.angle > 90 && this.angle < 270) this.direction = -1;
+    else this.direction = 1;
+    if(keyDown[65]){
+      this.angle -= 4;
+    }
+    if(keyDown[68]){
+      this.angle += 4;
+    }
+    while(this.angle > 360) this.angle -= 360;
+    while(this.angle < 0) this.angle += 360;
+    if(keyDown[87]){
+      this.x -= (this.slope / (Math.abs(this.slope) + 1)) * this.direction;
+      this.y += (1 / (Math.abs(this.slope) + 1)) * this.direction;
+    }
+    if(keyDown[83]){
+      this.x += (this.slope / (Math.abs(this.slope) + 1)) * this.direction;
+      this.y -= (1 / (Math.abs(this.slope) + 1)) * this.direction;
+    }
+  }
+  this.insult = function(){
+    for(var i = 0; i < enemies.length; i++){
+      if(distance(enemies[i], this) < 5 && enemies[i].runningTarget != this){
+        enemies[i].sides = 1.7;
+        enemies[i].changeSides(enemies[i], 1);
+        enemies[i].running = true;
+        enemies[i].runningTarget = this;
+        this.insultTimer = 0;
+        this.insultText = insults[Math.floor(Math.random() * insults.length)][0];
+      }
+    }
+    if(this.insultTimer < 60){
+      var xOffset = ((this.x * (s / 100)) - (p.x * (s / 100)) + (s / 2));
+      var yOffset = ((this.y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
+      this.insultTimer++;
+      ctx.fillText(this.insultText, xOffset, yOffset - (s * (3 / 100)));
+    }
+  }
+  this.draw = function(){
+    var xOffset = ((this.x * (s / 100)) - (p.x * (s / 100)) + (s / 2));
+    var yOffset = ((this.y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
+    drawLineAtAngle(50, this.angle, xOffset, yOffset);
+  }
+}
