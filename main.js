@@ -529,13 +529,15 @@ function Line(x, y, sides){
   }
   this.insult = function(){
     for(var i = 0; i < enemies.length; i++){
-      if(distance(enemies[i], this) < 5 && enemies[i].runningTarget != this){
-        enemies[i].sides = 1.7;
-        enemies[i].changeSides(enemies[i], 1);
-        enemies[i].running = true;
-        enemies[i].runningTarget = this;
-        this.insultTimer = 0;
-        this.insultText = insults[Math.floor(Math.random() * insults.length)][0];
+      if(enemies[i] != undefined){
+        if(distance(enemies[i], this) < 5 && enemies[i].runningTarget != this){
+          enemies[i].sides = 1.7;
+          enemies[i].changeSides(enemies[i], 1);
+          enemies[i].running = true;
+          enemies[i].runningTarget = this;
+          this.insultTimer = 0;
+          this.insultText = insults[Math.floor(Math.random() * insults.length)][0];
+        }
       }
     }
     if(this.insultTimer < 60){
