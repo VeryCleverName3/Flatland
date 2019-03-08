@@ -65,6 +65,8 @@ function updateOverworld(){
   //Reset screen
   ctx.clearRect(0, 0, s, s);
 
+  randomSpawns();
+
   drawEntities();
 
   //move player
@@ -79,7 +81,7 @@ function updateOverworld(){
     levelUp();
   }
 
-  randomSpawns();
+  cleanEnemyArray();
 }
 
 //draws entities in array
@@ -144,13 +146,15 @@ function Player(x, y, sides){
       this.insultCooldown = 0;
       var inBattle = false;
       for(var i = 0; i < enemies.length; i++){
-        if(distance(this, enemies[i]) < 10 && !inBattle){
-          inBattle = true;
-          tempPX = p.x;
-          tempPY = p.y;
-          enemyInBattle = enemies[i];
-          clearInterval(overLoop);
-          battleLoop = setInterval(battle, 1000 / 60);
+        if(enemies[i] != undefined){
+          if(distance(this, enemies[i]) < 10 && !inBattle){
+            inBattle = true;
+            tempPX = p.x;
+            tempPY = p.y;
+            enemyInBattle = enemies[i];
+            clearInterval(overLoop);
+            battleLoop = setInterval(battle, 1000 / 60);
+          }
         }
       }
     }
@@ -236,11 +240,13 @@ function Enemy(x, y, sides){
   }
   this.collide = function(){
     for(var i = 0; i < enemies.length; i++){
-      if(distance(enemies[i], this) < 5 && enemies[i].sides < this.sides && enemies.runningTarget != this){
-        if(enemies[i].sides > 3) enemies[i].changeSides(enemies[i], Math.ceil(enemies[i].sides - 1));
-        enemies[i].running = true;
-        enemies[i].runningTarget = this;
-        this.insultTimer = 0;
+      if(enemies[i] != undefined){
+        if(distance(enemies[i], this) < 5 && enemies[i].sides < this.sides && enemies.runningTarget != this){
+          if(enemies[i].sides > 3) enemies[i].changeSides(enemies[i], Math.ceil(enemies[i].sides - 1));
+          enemies[i].running = true;
+          enemies[i].runningTarget = this;
+          this.insultTimer = 0;
+        }
       }
     }
   }
@@ -266,7 +272,7 @@ function Enemy(x, y, sides){
 
 function callEnemyFunctions(){
   for(var i = 0; i < enemies.length; i++){
-    if(enemies[i].x > -Infinity){
+    if(enemies[i] != undefined){
       enemies[i].wander();
       enemies[i].collide();
       enemies[i].run();
@@ -475,14 +481,14 @@ function pickToReplace(){
 function randomSpawns(){
   var numEnemies = 0;
   for(var i = 0; i < enemies.length; i++){
-    if(enemies[i].x >= -Infinity){
+    if(enemies[i] != undefined){
       numEnemies++;
-    }
-    if(enemies[i].y > p.y + 130 || enemies[i].y < p.y - 130){
-      enemies[i].x = NaN;
-    }
-    if(enemies[i].x > p.x + 130 || enemies[i].x < p.x - 130){
-      enemies[i].x = NaN;
+
+      if(enemies[i].y > p.y + 130 || enemies[i].y < p.y - 130){
+        enemies[i] = undefined;
+      } else if(enemies[i].x > p.x + 130 || enemies[i].x < p.x - 130){
+        enemies[i] = undefined;
+      }
     }
   }
   if(numEnemies < 25){
@@ -544,4 +550,8 @@ function Line(x, y, sides){
     var yOffset = ((this.y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
     drawLineAtAngle(50, this.angle, xOffset, yOffset);
   }
+}
+
+function cleanEnemyArray(){
+  enemies = enemies.sort().splice(0, 25);
 }
