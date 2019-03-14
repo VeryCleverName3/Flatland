@@ -4,7 +4,7 @@ var ctx = c.getContext("2d");
 var s = c.width = c.height = window.innerHeight;
 
 //Enemy insult pool
-var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1], ["You're so out of SHAPE!", -1]];
+var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1], ["You're so out of SHAPE!", -1], ["You're out of LINE!", -1]];
 
 //Player insult pool
 var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not very SHARP!", 3], ["You're about to be penta-GONE!", 5], ["You're about to be hexa-GONE", 6], ["You're about to be septa-GONE", 7], ["You're about to be octa-GONE", 8], ["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1]];
@@ -61,10 +61,14 @@ onkeyup = function(e){
 //Create and intantiate a player
 var p = new Player(0, 0, 3);
 
+console.log(entities);
+
 //Create update function
 function updateOverworld(){
   //Reset screen
   ctx.clearRect(0, 0, s, s);
+
+  cleanEnemyArray();
 
   randomSpawns();
 
@@ -76,8 +80,6 @@ function updateOverworld(){
 
   //move player
   p.move();
-
-  p.draw();
 
   cleanEnemyArray();
 
@@ -126,6 +128,10 @@ function Entity(x, y, sides){
       if(object.sides < newSides + 0.02 && object.sides > newSides - 0.02){
         object.sides = newSides;
         object.health = newSides;
+        if(this.sides < 3){
+          entities.splice(object.id, 1);
+          enemies.splice(object.enemyId, 1);
+        }
         clearInterval(loop);
       }
     }, 1000 / 140);
@@ -159,15 +165,13 @@ function Player(x, y, sides){
       this.insultCooldown = 0;
       var inBattle = false;
       for(var i = 0; i < enemies.length; i++){
-        if(enemies[i] != undefined){
-          if(distance(this, enemies[i]) < 10 && !inBattle){
-            inBattle = true;
-            tempPX = p.x;
-            tempPY = p.y;
-            enemyInBattle = enemies[i];
-            clearInterval(overLoop);
-            battleLoop = setInterval(battle, 1000 / 60);
-          }
+        if(distance(this, enemies[i]) < 10 && !inBattle){
+          inBattle = true;
+          tempPX = p.x;
+          tempPY = p.y;
+          enemyInBattle = enemies[i];
+          clearInterval(overLoop);
+          battleLoop = setInterval(battle, 1000 / 60);
         }
       }
     }
@@ -254,13 +258,11 @@ function Enemy(x, y, sides){
   }
   this.collide = function(){
     for(var i = 0; i < enemies.length; i++){
-      if(enemies[i] != undefined){
-        if(distance(enemies[i], this) < 5 && enemies[i].sides < this.sides && enemies.runningTarget != this){
-          if(enemies[i].sides > 3) enemies[i].changeSides(enemies[i], Math.ceil(enemies[i].sides - 1));
-          enemies[i].running = true;
-          enemies[i].runningTarget = this;
-          this.insultTimer = 0;
-        }
+      if(distance(enemies[i], this) < 5 && enemies[i].sides < this.sides && enemies.runningTarget != this){
+        if(enemies[i].sides > 3) enemies[i].changeSides(enemies[i], Math.ceil(enemies[i].sides - 1));
+        enemies[i].running = true;
+        enemies[i].runningTarget = this;
+        this.insultTimer = 0;
       }
     }
   }
@@ -388,8 +390,8 @@ function useInsult(insult){
       p.score++;
       p.health = p.sides;
       enemyInBattle.x = NaN;
-      delete enemies[enemyInBattle.enemyId];
-      delete entities[enemyInBattle.id];
+      entities.splice(entities.indexOf(enemyInBattle), 1);
+      enemies.splice(enemies.indexOf(enemyInBattle), 1);
       delete enemyInBattle;
       clearInterval(battleLoop);
       overLoop = setInterval(updateOverworld, 1000 / 60);
@@ -496,16 +498,15 @@ function pickToReplace(){
 function randomSpawns(){
   var numEnemies = 0;
   for(var i = 0; i < enemies.length; i++){
-    if(enemies[i] != undefined){
-      numEnemies++;
-
-      if(enemies[i].y > p.y + 130 || enemies[i].y < p.y - 130){
-        delete entities[enemies[i].id];
-        delete enemies[i];
-      } else if(enemies[i].x > p.x + 130 || enemies[i].x < p.x - 130){
-        delete entities[enemies[i].id];
-        delete enemies[i];
-      }
+    numEnemies++;
+    if(enemies[i].y > p.y + 130 || enemies[i].y < p.y - 130){
+      entities[entities.indexOf(enemies[i])] = undefined;
+      enemies[i] = undefined;
+      numEnemies--;
+    } else if(enemies[i].x > p.x + 130 || enemies[i].x < p.x - 130){
+      entities[entities.indexOf(enemies[i])] = undefined;
+      enemies[i] = undefined;
+      numEnemies--;
     }
   }
   if(numEnemies < 25){
@@ -546,15 +547,13 @@ function Line(x, y, sides){
   }
   this.insult = function(){
     for(var i = 0; i < enemies.length; i++){
-      if(enemies[i] != undefined){
-        if(distance(enemies[i], this) < 5 && enemies[i].runningTarget != this){
-          enemies[i].sides = 1.7;
-          enemies[i].changeSides(enemies[i], 1);
-          enemies[i].running = true;
-          enemies[i].runningTarget = this;
-          this.insultTimer = 0;
-          this.insultText = insults[Math.floor(Math.random() * insults.length)][0];
-        }
+      if(distance(enemies[i], this) < 5 && enemies[i].runningTarget != this){
+        enemies[i].sides = 1.7;
+        enemies[i].changeSides(enemies[i], 1);
+        enemies[i].running = true;
+        enemies[i].runningTarget = this;
+        this.insultTimer = 0;
+        this.insultText = insults[Math.floor(Math.random() * insults.length)][0];
       }
     }
     if(this.insultTimer < 60){
@@ -572,13 +571,14 @@ function Line(x, y, sides){
 }
 
 function cleanEnemyArray(){
-  enemies = enemies.sort();
-  var numNotNullEnemies = 0;
-  for(var i = 0; i < enemies.length; i++){
-    if(enemies[i] != undefined){
-      numNotNullEnemies++;
+  for(var i = 0; i < entities.length; i++){
+    if(entities[i] == undefined){
+      entities.splice(i, 1);
     }
   }
-  enemies = enemies.splice(0, numNotNullEnemies);
-  entities = enemies;
+  for(var i = 0; i < enemies.length; i++){
+    if(enemies[i] == undefined){
+      enemies.splice(i, 1);
+    }
+  }
 }
