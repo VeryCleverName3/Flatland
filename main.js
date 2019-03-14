@@ -4,7 +4,8 @@ var ctx = c.getContext("2d");
 var s = c.width = c.height = window.innerHeight;
 
 //Enemy insult pool
-var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1]];
+var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1], ["You're so out of SHAPE!", -1]];
+
 //Player insult pool
 var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not very SHARP!", 3], ["You're about to be penta-GONE!", 5], ["You're about to be hexa-GONE", 6], ["You're about to be septa-GONE", 7], ["You're about to be octa-GONE", 8], ["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1]];
 
@@ -67,20 +68,31 @@ function updateOverworld(){
 
   randomSpawns();
 
+  cleanEnemyArray();
+
   drawEntities();
+
+  cleanEnemyArray();
 
   //move player
   p.move();
 
+  p.draw();
+
+  cleanEnemyArray();
+
   //manage insults
   p.insult();
 
+  cleanEnemyArray();
+
   callEnemyFunctions();
+
+  cleanEnemyArray();
 
   if(p.score >= p.scoreToNext){
     levelUp();
   }
-
   cleanEnemyArray();
 }
 
@@ -97,6 +109,7 @@ function Entity(x, y, sides){
   this.y = y;
   this.sides = sides;
   this.health = sides;
+  this.id = entities.length;
   entities[entities.length] = this;
   //Function to draw entity
   this.draw = function(){
@@ -220,6 +233,7 @@ function drawLineAtAngle(r, angle, xOffset, yOffset){
 
 function Enemy(x, y, sides){
   Entity.call(this, x, y, sides);
+  this.enemyId = enemies.length;
   enemies[enemies.length] = this;
   var timer = 0;
   var headingX = 0;
@@ -272,12 +286,10 @@ function Enemy(x, y, sides){
 
 function callEnemyFunctions(){
   for(var i = 0; i < enemies.length; i++){
-    if(enemies[i] != undefined){
-      enemies[i].wander();
-      enemies[i].collide();
-      enemies[i].run();
-      enemies[i].sayInsult();
-    }
+    enemies[i].wander();
+    enemies[i].collide();
+    enemies[i].run();
+    enemies[i].sayInsult();
   }
 }
 
@@ -375,7 +387,10 @@ function useInsult(insult){
     setTimeout(function(){
       p.score++;
       p.health = p.sides;
-      enemyInBattle.x = undefined;
+      enemyInBattle.x = NaN;
+      delete enemies[enemyInBattle.enemyId];
+      delete entities[enemyInBattle.id];
+      delete enemyInBattle;
       clearInterval(battleLoop);
       overLoop = setInterval(updateOverworld, 1000 / 60);
       p.x = tempPX;
@@ -485,9 +500,11 @@ function randomSpawns(){
       numEnemies++;
 
       if(enemies[i].y > p.y + 130 || enemies[i].y < p.y - 130){
-        enemies[i] = undefined;
+        delete entities[enemies[i].id];
+        delete enemies[i];
       } else if(enemies[i].x > p.x + 130 || enemies[i].x < p.x - 130){
-        enemies[i] = undefined;
+        delete entities[enemies[i].id];
+        delete enemies[i];
       }
     }
   }
@@ -555,5 +572,13 @@ function Line(x, y, sides){
 }
 
 function cleanEnemyArray(){
-  enemies = enemies.sort().splice(0, 25);
+  enemies = enemies.sort();
+  var numNotNullEnemies = 0;
+  for(var i = 0; i < enemies.length; i++){
+    if(enemies[i] != undefined){
+      numNotNullEnemies++;
+    }
+  }
+  enemies = enemies.splice(0, numNotNullEnemies);
+  entities = enemies;
 }
