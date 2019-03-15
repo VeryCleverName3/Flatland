@@ -19,6 +19,9 @@ var overLoop = setInterval(updateOverworld, 1000 / 60);
 //array of boolean values at keycode indexes
 var keyDown = [];
 
+//Array of npcs
+var npcs = [];
+
 //Current enemy insults
 var currentEnemyInsult;
 
@@ -61,7 +64,8 @@ onkeyup = function(e){
 //Create and intantiate a player
 var p = new Player(0, 0, 3);
 
-console.log(entities);
+//Makes the world
+createWorld();
 
 //Create update function
 function updateOverworld(){
@@ -70,7 +74,7 @@ function updateOverworld(){
 
   cleanEnemyArray();
 
-  randomSpawns();
+  //randomSpawns();
 
   cleanEnemyArray();
 
@@ -89,6 +93,8 @@ function updateOverworld(){
   cleanEnemyArray();
 
   callEnemyFunctions();
+
+  callNPCFunctions();
 
   cleanEnemyArray();
 
@@ -109,6 +115,7 @@ function drawEntities(){
 function Entity(x, y, sides){
   this.x = x;
   this.y = y;
+  this.color = "black";
   this.sides = sides;
   this.health = sides;
   this.id = entities.length;
@@ -116,7 +123,7 @@ function Entity(x, y, sides){
   //Function to draw entity
   this.draw = function(){
     //ctx.fillRect((this.x * s / 100) - (p.x * s / 100) + (s / 2), (this.y * s / 100) - (p.y * s / 100) + (s / 2), s / 100, s / 100);
-    drawPolygon(this.sides, 2, this.x, this.y);
+    drawPolygon(this.sides, 2, this.x, this.y, this.color);
   }
   this.changeSides = function(object, newSides){
     var loop = setInterval(function(){
@@ -179,12 +186,13 @@ function Player(x, y, sides){
 }
 
 //Draw polygons
-function drawPolygon(sides, r, x, y){
+function drawPolygon(sides, r, x, y, color){
   r *= s / 100;
   var angleDif  = 180 - (((sides - 2) * 180) / sides);
   var angle = 0;
   var xOffset = ((x * (s / 100)) - (p.x * (s / 100)) + (s / 2));
   var yOffset = ((y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
+  ctx.beginPath();
   for(var i = 0; i < sides; i++){
 
     //Declare and initialize needed values to draw a line
@@ -207,6 +215,9 @@ function drawPolygon(sides, r, x, y){
     drawLineAtAngle(sideLength / 2, angle - 90, xMid + xOffset, yMid + yOffset);
     angle += angleDif;
   }
+  ctx.strokeStyle = color;
+  ctx.stroke();
+  ctx.closePath();
 }
 
 //draws a line at an angle given distance, angle, and starting coordinates
@@ -228,11 +239,9 @@ function drawLineAtAngle(r, angle, xOffset, yOffset){
   }
   //console.log(Math.sqrt((r * r) * (1 / ((slope * slope) + 1))) + ", " + Math.sqrt((r * r) * ((slope * slope) / ((slope * slope) + 1))));
   //ctx.fillRect(xOffset + xMid - 5, yOffset + yMid - 5, 10, 10);
-  ctx.beginPath();
   ctx.moveTo(xOffset, yOffset);
   ctx.lineTo(xOffset + xMid, yOffset + yMid);
-  ctx.stroke();
-  ctx.closePath();
+
 }
 
 function Enemy(x, y, sides){
@@ -579,6 +588,62 @@ function cleanEnemyArray(){
   for(var i = 0; i < enemies.length; i++){
     if(enemies[i] == undefined){
       enemies.splice(i, 1);
+    }
+  }
+}
+
+//NPC constructor
+function NPC(x, y, sides, text){
+  Entity.call(this, x, y, sides);
+  this.npcid = npcs.length;
+  npcs.push(this);
+  this.text = text;
+  this.textTimerIndex = 0;
+  this.action = function(){};
+  this.xSpeed = 0;
+  this.ySpeed = 0;
+  this.completedAction = false;
+  this.move = function(){
+    this.x += this.xSpeed;
+    this.y += this.ySpeed;
+  }
+  this.talk = function(){
+    if(distance(p, this)  < 20){
+      var xOffset = ((this.x * (s / 100)) - (p.x * (s / 100)) + (s / 2));
+      var yOffset = ((this.y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
+      this.textTimerIndex++;
+      if(this.textTimerIndex >= (text.length * 180)){
+         this.textTimerIndex = 0;
+         if(!this.completedAction) {
+           this.action();
+           this.completedAction = true;
+         }
+       }
+      ctx.fillText(this.text[Math.floor(this.textTimerIndex / 180)], xOffset, yOffset - (s * (5 / 100)));
+    }
+  }
+}
+
+function  callNPCFunctions(){
+  for(var i = 0; i < npcs.length; i++){
+    npcs[i].talk();
+    npcs[i].move();
+  }
+}
+
+function createWorld(){
+  new NPC(10, 0,  3, ["Hello, and welcome to Flatland!"]);
+  new NPC(30, 20, 3, ["This is a world of controversy, adventure, 2 dimensions, and lazy developers."]);
+  new NPC(50, 40, 3, ["The NPC's can't even move!"]);
+  new NPC(30, 60, 3, ["Or say more than one thing!", "Or so you thought!", "The repeating text is a feature."]);
+  new NPC(30, 80, 3, ["If you're ready to set off on your adventure, go and talk to Professor Pentagon.", "He's working on his new invention, color, south of me."]);
+  new NPC(30, 150, 5, ["Hello!", "It's good to see you, [Name Here]!", "...", "You're not going to say anything?", "Do you notice... anything different?", "I made color!", "I've named this one purple.", "Here, you can have some.", "It's called 'clear'", "Anyway, could you go and try to tell the nobles about it for me?", "They're the ones with lots of sides.", "You can find them further south."]);
+  npcs[5].color = "red";
+  var badGuy0 = new NPC(30, 200, 20, ["What's this!?", "You seem... different, somehow.", "A different hue, has Professor Pentagon colored you clear?", "This new invention is useless.", "I'm sorry, but I'll have to call guards to fight you now."]);
+  badGuy0.action = function(){
+    for(var i = 0; i < 4; i ++){
+      new Enemy(p.x + Math.random() * 50 - 25, p.y + Math.random() * 50 - 25, p.sides + 1);
+      this.xSpeed = 1;
     }
   }
 }
