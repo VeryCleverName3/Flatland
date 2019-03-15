@@ -16,11 +16,18 @@ ctx.font = "20px comic sans ms";
 //establish timing loop at 60 fps
 var overLoop = setInterval(updateOverworld, 1000 / 60);
 
+//boolean for if random spawns should be used
+var randSpawns = false;
+
 //array of boolean values at keycode indexes
 var keyDown = [];
 
 //Array of npcs
 var npcs = [];
+
+//Objective points
+var objectiveX;
+var objectiveY;
 
 //Current enemy insults
 var currentEnemyInsult;
@@ -74,7 +81,9 @@ function updateOverworld(){
 
   cleanEnemyArray();
 
-  //randomSpawns();
+  drawObjectiveLine();
+
+  if(randSpawns) randomSpawns();
 
   cleanEnemyArray();
 
@@ -612,7 +621,7 @@ function NPC(x, y, sides, text){
       var xOffset = ((this.x * (s / 100)) - (p.x * (s / 100)) + (s / 2));
       var yOffset = ((this.y * (s / 100)) - (p.y * (s / 100)) + (s / 2));
       this.textTimerIndex++;
-      if(this.textTimerIndex >= (text.length * 180)){
+      if(this.textTimerIndex >= (this.text.length * 180)){
          this.textTimerIndex = 0;
          if(!this.completedAction) {
            this.action();
@@ -631,19 +640,21 @@ function  callNPCFunctions(){
   }
 }
 
-function createWorld(){
-  new NPC(10, 0,  3, ["Hello, and welcome to Flatland!"]);
-  new NPC(30, 20, 3, ["This is a world of controversy, adventure, 2 dimensions, and lazy developers."]);
-  new NPC(50, 40, 3, ["The NPC's can't even move!"]);
-  new NPC(30, 60, 3, ["Or say more than one thing!", "Or so you thought!", "The repeating text is a feature."]);
-  new NPC(30, 80, 3, ["If you're ready to set off on your adventure, go and talk to Professor Pentagon.", "He's working on his new invention, color, south of me."]);
-  new NPC(30, 150, 5, ["Hello!", "It's good to see you, [Name Here]!", "...", "You're not going to say anything?", "Do you notice... anything different?", "I made color!", "I've named this one purple.", "Here, you can have some.", "It's called 'clear'", "Anyway, could you go and try to tell the nobles about it for me?", "They're the ones with lots of sides.", "You can find them further south."]);
-  npcs[5].color = "red";
-  var badGuy0 = new NPC(30, 200, 20, ["What's this!?", "You seem... different, somehow.", "A different hue, has Professor Pentagon colored you clear?", "This new invention is useless.", "I'm sorry, but I'll have to call guards to fight you now."]);
-  badGuy0.action = function(){
-    for(var i = 0; i < 4; i ++){
-      new Enemy(p.x + Math.random() * 50 - 25, p.y + Math.random() * 50 - 25, p.sides + 1);
-      this.xSpeed = 1;
+function drawObjectiveLine(){
+  if(objectiveX != undefined){
+    var coords = {
+      x: objectiveX,
+      y: objectiveY
+    }
+    if(distance(coords, p) > (Math.sqrt((50 * 50) + (50 * 50)))){
+      var xOffset = ((objectiveX * (s / 100)) - (p.x * (s / 100)) + (s / 2));
+      var yOffset = ((objectiveY * (s / 100)) - (p.y * (s / 100)) + (s / 2));
+      ctx.beginPath();
+      ctx.moveTo(s / 2, s / 2);
+      ctx.lineTo(xOffset, yOffset);
+      ctx.strokeStyle = "grey";
+      ctx.stroke();
+      ctx.closePath();
     }
   }
 }
