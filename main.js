@@ -7,7 +7,7 @@ var s = c.width = c.height = window.innerHeight;
 var insults = [["You're not looking very SHARP today.", -1], ["You're about to be poly-GONE!", -1], ["You're a poly-GONE-er!", -1], ["I'm poly-GONNA beat you up!", -1], ["Stop being so OBTUSE!", -1], ["You're so EDGY!", -1], ["Stop being so ACUTE!", -1], ["You're so out of SHAPE!", -1], ["You're out of LINE!", -1]];
 
 //Player insult pool
-var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not very SHARP!", 3], ["You're about to be penta-GONE!", 5], ["You're about to be hexa-GONE", 6], ["You're about to be septa-GONE", 7], ["You're about to be octa-GONE", 8], ["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1]];
+var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not very SHARP!", 3], ["You're about to be penta-GONE!", 5], ["You're about to be hexa-GONE", 6], ["You're about to be septa-GONE", 7], ["You're about to be octa-GONE", 8], ["Don't be so SQUARE!", 4], ["I'm poly-GONNA beat you up", -1], ["Don't be so OBTUSE", -1], ["You look like a piece of modern art", -1], ["You OCTA get outta here!", 8]];
 
 //Set up textalign and format
 ctx.textAlign = "center";
