@@ -1,6 +1,6 @@
 function createWorld(){
   new NPC(10, 0,  3, ["Hello, and welcome to Flatland!"]);
-  new NPC(30, 20, 3, ["This is a world of controversy, adventure, 2 dimensions, and lazy developers."]);
+  new NPC(30, 20, 3, ["This is a world of adventure, 2 dimensions, and a lazy developer."]);
   new NPC(50, 40, 3, ["The NPC's can't even move!"]);
   new NPC(30, 60, 3, ["Or say more than one thing!", "Or so you thought!", "The repeating text is a feature."]);
   new NPC(30, 80, 3, ["If you're ready to set off on your adventure, go and talk to Professor Pentagon.", "He's working on his new invention, color, south of me."]);
@@ -14,11 +14,11 @@ function createWorld(){
       setTimeout(function(){
         badGuy0 = undefined;
         npcs[5].textTimerIndex = 0;
-        npcs[5].text = ["It appears we will be alone in this quest.", "No, I promise, you did agree to this.", "Anyway, could you please deliver this paint bucket to my color-inator?", "It's located in the far east of me, and there are many enemies along the way.", "You can also follow the light grey line to the point."];
+        npcs[5].text = ["I guess we'll have to be alone in this quest.", "No, I promise, you did agree.", "Anyway, I've left a color-inator to bring you out of the tutorial.", "You can follow this objective line."];
         npcs[5].action = function(){
           objectiveX = 200;
           objectiveY = 0;
-          new NPC(200, 0, 4, ["Hello- I am Professor Pentagon's Color-Inator.", "I will now teleport you to the council of Many-Edged polygons, as a messenger", "I know it's a bad decision, given you can't talk.", "Here, I'll color you green- fare well."]).color = "pink";
+          new NPC(200, 0, 4, ["Hello- I'm the professor's color inator.", "I'm a convenient plot device, designed to bring you somewhere else.", "And make you pink. Good luck!"]).color = "pink";
           npcs[npcs.length - 1].action = function(){
             p.color = "purple";
             entities.splice(1, entities.length - 1);
@@ -38,4 +38,16 @@ function createWorld(){
 
 function stageTwo(){
   randSpawns = true;
+  var checkLoop = setInterval(function(){
+    if(p.sides > 10){
+      p.x = 0;
+      p.y = 0;
+      randSpawns = false;
+      clearInterval(checkLoop);
+      new NPC(30, 30, 5, ["You finished the game!", "I'm glad you decided to waste your time."]);
+      npcs[npcs.length - 1].color = red;
+      npcs[npcs.length - 1].action = function(){
+      }
+    }
+  }, 1000);
 }

@@ -22,6 +22,9 @@ var randSpawns = false;
 //array of boolean values at keycode indexes
 var keyDown = [];
 
+//Array of colors to be randomly assigned to enemies
+var colors = ["red", "blue", "green", "purple", "pink", "yellow", "orange"];
+
 //Array of npcs
 var npcs = [];
 
@@ -333,7 +336,9 @@ function battle(){
 }
 
 function drawObjectsInBattle(){
+  ctx.strokeStyle = p.color;
   drawPolygon(p.sides, 7, -25, 5);
+  ctx.strokeStyle = enemyInBattle.color;
   drawPolygon(enemyInBattle.sides, 4, 25, -25);
 }
 
@@ -433,6 +438,7 @@ function drawInsult(){
 
 function levelUp(){
   ctx.fillStyle = "white";
+  ctx.strokeStyle = "black";
   ctx.fillRect(s * (2.25 / 4), 0, s / 2, s);
   ctx.strokeRect(s * (2.25 / 4), 0, s * (1.75 / 4), s);
   ctx.beginPath();
@@ -533,6 +539,7 @@ function randomSpawns(){
     while(x > -50 && x < 50) x = Math.random() * 130 - 65;
     while(y > -50 && y < 50) y = Math.random() * 130 - 65;
     new Enemy(x + p.x, y + p.y, Math.floor(Math.random() * 8 + 3));
+    enemies[enemies.length - 1].color = colors[Math.floor(Math.random() * colors.length)];
   }
 }
 
