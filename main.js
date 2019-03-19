@@ -71,6 +71,13 @@ onkeyup = function(e){
   keyDown[e.which] = false;
 }
 
+//Mouse down event listener for link to code
+onmousedown = function(e){
+  if(e.clientY < 50){
+    window.open("code.html");
+  }
+}
+
 //Create and intantiate a player
 var p = new Player(0, 0, 3);
 
@@ -81,6 +88,8 @@ createWorld();
 function updateOverworld(){
   //Reset screen
   ctx.clearRect(0, 0, s, s);
+
+  ctx.fillText("Click here to see code", s / 2, 30);
 
   cleanEnemyArray();
 
