@@ -11,7 +11,7 @@ var learnableInsults = [["Are you all RIGHT?", 4], ["For a triangle, you're not 
 
 //Set up textalign and format
 ctx.textAlign = "center";
-ctx.font = "20px comic sans ms";
+ctx.font = (s / 40.5) + "px comic sans ms";
 
 //establish timing loop at 60 fps
 var overLoop = setInterval(updateOverworld, 1000 / 60);
